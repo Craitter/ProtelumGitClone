@@ -1,0 +1,6 @@
+RowName,Tag,DevComment
+,Ability,
+,Ability.AbilityClasses,
+,Ability.Cooldown,
+,Ability.AbilitySlot,
+,Ability.NotCanceledByStun,

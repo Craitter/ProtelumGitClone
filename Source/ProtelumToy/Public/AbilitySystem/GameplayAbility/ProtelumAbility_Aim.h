@@ -24,13 +24,14 @@ public:
 protected:
 	TObjectPtr<AProtelumCharacter> Character = {nullptr};
 
+	//Time in Seconds until the Long Aiming Ends
 	UPROPERTY(EditAnywhere)
 	float TimeUntilAimingEnds = 0.0f;
-
+	
 	FGameplayTag LongAimTag;
 	FGameplayTag ShortAimTag;
-	bool bDelayAimEnd = false;
 	
+	//Callback functions to End the Ability It was held alive because there was a LongAimTag on the ASC
 	FTimerHandle DelayAimTimer;
 	void OnAimEnd();
 
@@ -38,7 +39,8 @@ private:
 	FGameplayAbilitySpecHandle OutHandle;
 	FGameplayAbilityActorInfo* OutActorInfo;
 	FGameplayAbilityActivationInfo OutActivationInfo;
-	bool OutbReplicateEndAbility;
-	bool OutbWasCancelled;
-	
+	bool bOutReplicateEndAbility;
+	bool bOutWasCancelled;
+
+	bool bDelayAimEnd = false;
 };

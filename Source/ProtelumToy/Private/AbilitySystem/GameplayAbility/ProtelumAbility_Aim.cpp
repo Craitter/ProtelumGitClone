@@ -33,7 +33,7 @@ void UProtelumAbility_Aim::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		{
 			return;
 		}
-
+	
 		Character = Cast<AProtelumCharacter>(GetAvatarActorFromActorInfo());
 		if(IsValid(Character))
 		{
@@ -43,7 +43,7 @@ void UProtelumAbility_Aim::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 				bDelayAimEnd = true;
 			}
 			Character->SetMState(EMovementState::MS_Aim);
-			OutbReplicateEndAbility = true;
+			bOutReplicateEndAbility = true;
 		}
 	}
 }
@@ -71,8 +71,8 @@ void UProtelumAbility_Aim::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		OutHandle = Handle;
 		OutActivationInfo = ActivationInfo;
-		OutbReplicateEndAbility = bReplicateEndAbility;
-		OutbWasCancelled = bWasCancelled;
+		bOutReplicateEndAbility = bReplicateEndAbility;
+		bOutWasCancelled = bWasCancelled;
 		const TWeakObjectPtr<UWorld> World = GetWorld();
 		FTimerManager& TimerManager = World->GetTimerManager();
 		TimerManager.SetTimer(DelayAimTimer, this, &UProtelumAbility_Aim::OnAimEnd, TimeUntilAimingEnds);
@@ -89,5 +89,5 @@ void UProtelumAbility_Aim::EndAbility(const FGameplayAbilitySpecHandle Handle,
 void UProtelumAbility_Aim::OnAimEnd()
 {
 	bDelayAimEnd = false;
-	EndAbility(OutHandle, CurrentActorInfo, OutActivationInfo, OutbReplicateEndAbility, OutbWasCancelled);
+	EndAbility(OutHandle, CurrentActorInfo, OutActivationInfo, bOutReplicateEndAbility, bOutWasCancelled);
 }

@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayAbilitySpec.h"
+#include "GameplayAbilitySpecHandle.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "AbilityBindingDataAsset.generated.h"
 
@@ -24,7 +25,7 @@ struct FGameplayAbilityInfo
 	TSoftObjectPtr<UInputAction> InputAction;
 
 	UPROPERTY()//Runtime Todo: Change to Handle, this is much more efficient
-	FGameplayAbilitySpec AbilitySpec;
+	FGameplayAbilitySpecHandle SpecHandle;
 	
 	UPROPERTY(EditDefaultsOnly, Meta = (Categories = "Ability.AbilitySlot"))
 	FGameplayTag SlotTag;

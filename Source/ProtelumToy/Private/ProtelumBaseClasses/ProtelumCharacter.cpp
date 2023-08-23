@@ -7,8 +7,8 @@
 #include "NiagaraComponent.h"
 #include "Abilities/GameplayAbilityTargetActor.h"
 #include "AbilitySystem/ProtelumAbilitySystemComponent.h"
-#include "AbilitySystem/AbilityActors/SimpleProjectile.h"
 #include "AbilitySystem/AttributeSets/StaticActorAttributeSet.h"
+#include "ActorComponents/ContainerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Character/Components/ProtelumSpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -69,6 +69,12 @@ AProtelumCharacter::AProtelumCharacter()
 	{
 		WeaponNiagaraSystem->SetupAttachment(WeaponComponent);
 	}
+	InventoryComponent = CreateDefaultSubobject<UContainerComponent>("ContainerComponent");
+	if(ensure(IsValid(InventoryComponent)))
+	{
+		InventoryComponent->InitializeContainerType(EContainerTypes::CT_Inventory, 16);
+		//Todo: make this depend on level, probably later init size
+	}
 }
 
 // Called when the game starts or when spawned
@@ -110,6 +116,41 @@ void AProtelumCharacter::Tick(float DeltaTime)
 	DrawDebugString(GetWorld(),FVector(0, 0, 100),UEnum::GetValueAsString(GetLocalRole()), this, FColor::Green,DeltaTime);
 }
 
+
+FTransform AProtelumCharacter::GetProjectileSpawnTransform()
+{
+	FTransform SpawnTransform = FTransform::Identity;
+	SpawnTransform.SetLocation(WeaponComponent->GetSocketLocation("projectile"));
+	if(MState == EMovementState::MS_Aim)
+	{
+		FRotator CameraRotation = Camera->GetComponentRotation();
+		CameraRotation.Roll = 0.0f;
+		SpawnTransform.SetRotation(CameraRotation.Quaternion());
+	}
+	else
+	{
+		FRotator CameraRotation = Camera->GetComponentRotation();
+		CameraRotation.Roll = 0.0f;
+		SpawnTransform.SetRotation(CameraRotation.Quaternion());
+	}
+	return SpawnTransform;
+}
+
+void AProtelumCharacter::GetTargetingData(FVector& PlayerLocation, FVector& CameraLocation,
+	FVector& WeaponCenterLocation, FVector& CameraForwardVector) const
+{
+	PlayerLocation = GetActorLocation();
+
+	if(IsValid(Camera))
+	{
+		CameraLocation = Camera->GetComponentLocation();
+		CameraForwardVector = Camera->GetForwardVector();
+	}
+	if(IsValid(WeaponComponent))
+	{
+		WeaponCenterLocation = WeaponComponent->GetSocketLocation("root");
+	}
+}
 
 void AProtelumCharacter::SetMState(EMovementState NewMState)
 {
@@ -190,7 +231,6 @@ void AProtelumCharacter::ActivateCurrentWeapon() const
 		ProtelumAbilitySystem->TryActivateAbilitiesByTag(FGameplayTagContainer(CurrentWeaponTag));
 	}
 }
-
 
 void AProtelumCharacter::SetCurrentWeapon(FGameplayTag WeaponTag)
 {

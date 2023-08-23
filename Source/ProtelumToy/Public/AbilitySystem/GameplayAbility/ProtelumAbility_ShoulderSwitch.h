@@ -18,9 +18,6 @@ public:
 	UProtelumAbility_ShoulderSwitch();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-
+	//CanActivate? Todo: Future more dynamic depending on animations 
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-private:
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> GameplayEffectToApply = {nullptr}; 
 };

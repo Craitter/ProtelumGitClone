@@ -1,0 +1,5 @@
+Key,SourceString,Comment
+stats_level_character,Level,"numeric value, communicates strength"
+stats_artifacts_collected,Artifacts,count of the collected artifacts
+stats_hours,Hours played,"numeric value, time played"
+stats_lastplayedwith,Last played with,followed by a username of another player

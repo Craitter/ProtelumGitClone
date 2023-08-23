@@ -11,7 +11,9 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"EnhancedInput",
-				"GameplayAbilities"
+				"GameplayAbilities",
+				"UMG",
+				"CoreUObject"
 			]
 		}
 	],
@@ -25,6 +27,14 @@
 		},
 		{
 			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "HoudiniEngine",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
 			"Enabled": true
 		}
 	]

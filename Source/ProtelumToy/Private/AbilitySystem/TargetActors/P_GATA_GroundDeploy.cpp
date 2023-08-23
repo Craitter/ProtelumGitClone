@@ -6,7 +6,6 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemLog.h"
 #include "Abilities/GameplayAbility.h"
-#include "Camera/CameraComponent.h"
 #include "ProtelumBaseClasses/ProtelumCharacter.h"
 
 AP_GATA_GroundDeploy::AP_GATA_GroundDeploy()
@@ -203,32 +202,27 @@ FGameplayAbilityTargetingLocationInfo AP_GATA_GroundDeploy::PerformGroundDeployT
 		bWasLastTraceValid = false;
 		return FGameplayAbilityTargetingLocationInfo();
 	}
-	const TWeakObjectPtr<UCameraComponent> CameraComponent = PlayerCharacter->GetCamera();
-	if(!CameraComponent.IsValid())
-	{
-		UE_LOG(LogTemp, Warning , TEXT("%s %s() Camera is not Valid"), *UEnum::GetValueAsString(GetLocalRole()), *FString(__FUNCTION__));
-		bWasLastTraceValid = false;
-		return FGameplayAbilityTargetingLocationInfo();
-	}
+	FVector PlayerLocation;
+	FVector CameraLocation;
+	FVector WeaponCenterLocation;
+	FVector CameraForwardVector;
+	PlayerCharacter->GetTargetingData(PlayerLocation, CameraLocation, WeaponCenterLocation, CameraForwardVector);
+	float DistanceCameraToPlayer = 0.0f;
 	if(bTraceOriginShouldBeCameraXY)
 	{
-		FVector OutLocation = CameraComponent->GetComponentLocation();
-		OutLocation.Z = StartTransform.GetLocation().Z;
-		StartTransform.SetLocation(OutLocation);
-
-		FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+		CameraLocation.Z = StartTransform.GetLocation().Z;
+		StartTransform.SetLocation(CameraLocation);
+		
 		PlayerLocation.Z = 0.0f;
-		FVector CameraLocation = CameraComponent->GetComponentLocation();
 		CameraLocation.Z = 0.0f;
-		const float DistanceCameraToPlayer = FVector::Distance(PlayerLocation, CameraLocation);
-		MaxHorizontalRange =+ DistanceCameraToPlayer;
+		DistanceCameraToPlayer = FVector::Distance(PlayerLocation, CameraLocation);
 	}
 
 	TWeakObjectPtr<UWorld> World = GetWorld();
 	check(World.Get())
 	
-	FVector HorizontalTraceDirection = CameraComponent->GetForwardVector().GetSafeNormal2D();
-	FVector HorizontalTraceEndLocation = StartTransform.GetLocation() + HorizontalTraceDirection * MaxHorizontalRange;
+	FVector HorizontalTraceDirection = CameraForwardVector.GetSafeNormal2D();
+	FVector HorizontalTraceEndLocation = StartTransform.GetLocation() + HorizontalTraceDirection * (MaxHorizontalRange + DistanceCameraToPlayer);
 	FVector HorizontalTraceStartLocation = StartTransform.GetLocation();
 	
 	FTransform InTransform = PerformHorizontalTrace(HorizontalTraceStartLocation, HorizontalTraceDirection , HorizontalTraceEndLocation, QueryParams);

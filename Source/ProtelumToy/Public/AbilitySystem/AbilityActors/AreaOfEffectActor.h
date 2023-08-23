@@ -25,15 +25,17 @@ public:
 
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	
-	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn))
-	bool bShouldAttachToParent = false;
 
-	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn))
-	FName ParentSocket = NAME_None;
-
+	//GameplayEffects to Apply to ASCs that Overlaps with us
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn))
 	TArray<FGameplayEffectSpecHandle> GameplayEffectsToApply;
+	
+	//If this is true we take the given Socket and Attach to it
+	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn))
+	bool bShouldAttachToParent = false;
+	//The Socket we attach to
+	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn))
+	FName ParentSocket = NAME_None;
 
 protected:
 	// Called when the game starts or when spawned
@@ -53,8 +55,7 @@ protected:
 	TWeakObjectPtr<UProtelumAbilitySystemComponent> InstigatorASC = {nullptr};
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+
 
 	
 

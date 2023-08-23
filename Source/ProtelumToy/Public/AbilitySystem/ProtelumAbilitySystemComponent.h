@@ -14,14 +14,19 @@ class PROTELUMTOY_API UProtelumAbilitySystemComponent : public UAbilitySystemCom
 {
 	GENERATED_BODY()
 
+public:
+
 	UProtelumAbilitySystemComponent();
 	
+	void SetIsPlayerControlled();
+
+	virtual void AbilityLocalInputPressed(int32 InputID) override;
+
+protected:
 	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;
 
 	virtual void OnRemoveAbility(FGameplayAbilitySpec& AbilitySpec) override;
 
-public:
-	void SetIsPlayerControlled();
 private:
 	FGameplayTag PlayerControlledTag;
 };

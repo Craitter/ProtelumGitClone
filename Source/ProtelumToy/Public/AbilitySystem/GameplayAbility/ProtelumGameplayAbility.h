@@ -16,7 +16,7 @@ enum class EAimBehavior : uint8
 	AB_NoAim = 0		UMETA(DisplayName = "NoAim"),
 	//Aim Rotation stops after the Ability is finished
 	AB_Short = 1			UMETA(DisplayName = "Fast"),
-	//AimRotation lasts for 3 Seconds after Aiming
+	//AimRotation lasts for X Seconds after Aiming SEE GA_Aim
 	AB_Long = 2			UMETA(DisplayName = "Long"),
 };
 
@@ -29,10 +29,11 @@ class PROTELUMTOY_API UProtelumGameplayAbility : public UGameplayAbility
 
 public:
 	UProtelumGameplayAbility();
+
+	virtual void OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	
 	virtual void PreActivate(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData) override;
 
-	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	// //ClientOnly
 	virtual void OnWaitingForConfirmInputBegin() override;
 	// //ClientOnly
@@ -47,14 +48,22 @@ public:
 	virtual const FGameplayTagContainer* GetCooldownTags() const override;
 
 	virtual void ApplyCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const override;
+
+
+	bool ShouldActivateAbilityOnInputPressed();
+	
+	// Is the player's input currently pressed? Only works if the ability is bound to input.
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	virtual bool IsInputPressed() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Ability|TargetData")
+	static void ClearTargetData(UPARAM(ref) FGameplayAbilityTargetDataHandle& TargetData);
 protected:
 	//Todo: Create Protelum BlueprintLibrary
 	UFUNCTION(BlueprintCallable)
 	FGameplayAbilityTargetingLocationInfo GetTargetLocationInfoByIndexOfTargetDataHandle(
 		FGameplayAbilityTargetDataHandle TargetData, const int32 Index);
 
-	// UPROPERTY(EditDefaultsOnly)
-	// bool bCharacterShouldAim;
 	
 	//this Determines if the Character Should be facing in Camera Direction during this Ability or not
 	UPROPERTY(EditDefaultsOnly)
@@ -65,6 +74,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	bool bHasToBeBoundToInput;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool bInputActivatesAbility;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bActivateAbilityOnGranted;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Cooldown")
 	FScalableFloat CooldownDuration;

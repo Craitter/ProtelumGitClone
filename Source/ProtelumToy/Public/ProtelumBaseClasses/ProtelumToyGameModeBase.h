@@ -3,15 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameFramework/GameMode.h"
 #include "ProtelumToyGameModeBase.generated.h"
+
+enum class EBaseWidgetType;
 
 /**
  * 
  */
-UCLASS()
-class PROTELUMTOY_API AProtelumToyGameModeBase : public AGameModeBase
+UCLASS(Abstract, NotBlueprintable, NotBlueprintType)
+class PROTELUMTOY_API AProtelumToyGameModeBase : public AGameMode
 {
 	GENERATED_BODY()
+
+public:
 	
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 };

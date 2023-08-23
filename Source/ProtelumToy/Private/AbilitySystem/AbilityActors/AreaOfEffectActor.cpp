@@ -104,11 +104,11 @@ void AAreaOfEffectActor::BeginPlay()
 	const FVector ActorScale = GetActorScale();
 	const FVector CleanedScale = {ActorScale.Z, ActorScale.Y, ActorScale.X};
 	Decal->SetWorldScale3D(CleanedScale);
-	
-	IAbilitySystemInterface* IAB = Cast<IAbilitySystemInterface>(GetInstigator());
-	if(IAB)
+
+	const IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetInstigator());
+	if(ASI)
 	{
-		InstigatorASC = Cast<UProtelumAbilitySystemComponent>(IAB->GetAbilitySystemComponent());
+		InstigatorASC = Cast<UProtelumAbilitySystemComponent>(ASI->GetAbilitySystemComponent());
 	}
 	if(bShouldAttachToParent)
 	{
@@ -134,12 +134,5 @@ void AAreaOfEffectActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 	AffectedASCs.Empty();
 	Super::EndPlay(EndPlayReason);
-}
-
-// Called every frame
-void AAreaOfEffectActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 

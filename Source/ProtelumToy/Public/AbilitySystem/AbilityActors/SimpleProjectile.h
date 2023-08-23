@@ -39,25 +39,31 @@ class PROTELUMTOY_API ASimpleProjectile : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASimpleProjectile();
-
-	virtual void PostInitializeComponents() override;
-
+	
+	//this event gets Fired after LifeSpawn Ends, On Collision or when the InstigatorConfirms
 	UPROPERTY(BlueprintAssignable)
 	FProjectileLifeEnds OnProjectileLifeEnds;
+	
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UFUNCTION()
+	virtual void OnRep_ProjectileColor();
+
+	
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-	UFUNCTION()
-	virtual void OnRep_ProjectileColor();
-	
+	//This Updates the Velocity of the Projectile on Clients (Careful with direction changes)
 	virtual void PostNetReceiveVelocity(const FVector& NewVelocity) override;
+
+	UFUNCTION()
+	void OnHitCallback(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
-	// AffectionRadius = 0 makes a SingleTargetProjectile
+	UFUNCTION()
+	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	// this can be called right after spawn and takes care of all Parameters to be applied
 	UFUNCTION(BlueprintCallable)
 	void ConfigureProjectile
 	(
@@ -71,70 +77,69 @@ public:
 		UPARAM(DisplayName = "Debug")					const bool InDebug = false
 	);
 	
-	virtual void Tick(float DeltaTime) override;
-	
 	UFUNCTION(BlueprintCallable)
 	void ConfirmByInstigator();
 	
+	virtual void SetLifeSpan(float InLifespan) override;
+	
+	virtual void LifeSpanExpired() override;
+
+	UFUNCTION()
+	virtual void CallbackLifeSpawnEnds(const FVector& ActorLocation, bool bAlreadyTriggered);
+
 	UFUNCTION(BlueprintCallable)
 	UProjectileMovementComponent* GetProjectileMovement();
 
 	UFUNCTION(BlueprintCallable)
 	USkeletalMeshComponent* GetSkeletalMeshComponent();
-
-	UFUNCTION()
-	void OnHitCallback(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-	
-	UFUNCTION()
-	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	virtual void SetLifeSpan(float InLifespan) override;
-	
-	virtual void LifeSpanExpired() override;
-
-	
-	virtual void CallbackLifeSpawnEnds(const FVector& ActorLocation, bool bAlreadyTriggered);
 protected:
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UNiagaraComponent> NiagaraSystem = {nullptr};
+
+	//The Color has to be Replicated and Sets the Material on Clients
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_ProjectileColor)
+	FLinearColor ProjectileColor;
+	
+	//This gets Called if the Projectile is a Explosive Projectile See EProjectileType
+	void Explode() const;
+	
+	void SingleTargetHit(TWeakObjectPtr<UAbilitySystemComponent> TargetASC) const;
+
+private:
+	//These Functions will be Called if there is a valid Target
+	void ApplyEffectsAfterHit(const TWeakObjectPtr<UAbilitySystemComponent> LocalTargetASC) const;
+	static void ApplyEffectsToASC(const TWeakObjectPtr<UAbilitySystemComponent> ASC, const TArray<FGameplayEffectSpecHandle>& GameplayEffectsToApply);
+	
+	//Will eventually be called on Hit or Overlap Last Resort on Confirm or Lifetime ends
+	void HandleCollision(TWeakObjectPtr<AActor> CollisionActor, const FHitResult& HitResult);
+	
+	//Calls Destroy at the End and before we can handle things like Particles or Sounds
+	void DestroyProjectile(bool NetForce);
+	
+	//Calls DestroyProjectile before being Destroyed
+	virtual void PreDestroyFromReplication() override;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent = {nullptr};
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> Mesh = {nullptr};
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UNiagaraComponent> NiagaraSystem = {nullptr};
-	
-	UPROPERTY(Replicated, ReplicatedUsing = OnRep_ProjectileColor)
-	FLinearColor ProjectileColor;
-
-	void Explode() const;
-	
-	void SingleTargetHit(TWeakObjectPtr<UAbilitySystemComponent> TargetASC) const;
-	
-
-private:
-
-	void ApplyEffectsAfterHit(const TWeakObjectPtr<UAbilitySystemComponent> LocalTargetASC) const;
-	
-	static void ApplyEffectsToASC(const TWeakObjectPtr<UAbilitySystemComponent> ASC, const TArray<FGameplayEffectSpecHandle>& GameplayEffectsToApply);
-
-	void SetProjectileColor();
-
-	void SetProjectileVelocity() const;
-
-	void ActivateCollisions();
-
-	void HandleCollision(TWeakObjectPtr<AActor> CollisionActor, const FHitResult& HitResult);
-
+	//Effects that will be Applied to every Target
 	TArray<FGameplayEffectSpecHandle> EffectsToApplyToTarget;
 
+	//Effects that will be Applied to Instigator for every Target Hit
 	TArray<FGameplayEffectSpecHandle> EffectsToApplyToInstigator;
 
+	//This is Set on Begin play and stays as reference for Instigator Effects
 	TObjectPtr<UAbilitySystemComponent> SourceASC = {nullptr};
 
+	//For changes to Material depending on the Ability which is casted
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial = {nullptr};
 
+	//Begin Blueprint defined Values
 	float AffectionRadius;
 	
 	float ProjectileLifeSpan;
@@ -145,10 +150,12 @@ private:
 
 	bool bDebug = false;
 
-	void DestroyProjectile();
-
-	virtual void PreDestroyFromReplication() override;
-
 	EProjectileType ProjectileType;
+	//End Blueprint defined Values
 
+	void SetProjectileColor();
+
+	void SetProjectileVelocity() const;
+
+	void ActivateCollisions();
 };

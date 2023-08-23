@@ -14,6 +14,6 @@ class PROTELUMTOY_API UProtelumAbility_SecondaryWeapon : public UProtelumGamepla
 {
 	GENERATED_BODY()
 	UProtelumAbility_SecondaryWeapon();
-
+	//CanActivate? Todo: Future more dynamic depending on animations 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 };

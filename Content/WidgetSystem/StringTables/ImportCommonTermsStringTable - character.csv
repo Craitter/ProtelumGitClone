@@ -1,0 +1,12 @@
+Key,SourceString,Comment
+character_type_human,Human,Noun
+character_type_shaman,Shaman,Noun
+character_type,Class,Human or Shaman (defining playstyle)
+character_delete,Delete,"verb,"
+character_create,Create,"verb,"
+character_header_create,Create Character,
+character_select,Select Character,
+character_description_human,filler description human,
+character_description_shaman,filler description shaman,
+character_name,Name,"noun, prefix for player defined name"
+character,Character,

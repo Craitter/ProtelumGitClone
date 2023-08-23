@@ -15,12 +15,18 @@ void UProtelumAbility_BaseAttack::ActivateAbility(const FGameplayAbilitySpecHand
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	
-	const TWeakObjectPtr<AProtelumCharacter> Character = Cast<AProtelumCharacter>(ActorInfo->AvatarActor);
-	if(Character.IsValid())
+	if (HasAuthorityOrPredictionKey(ActorInfo, &ActivationInfo))
 	{
-		Character->ActivateCurrentWeapon();
+		if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+		{
+			return;
+		}
+	
+		const TWeakObjectPtr<AProtelumCharacter> Character = Cast<AProtelumCharacter>(ActorInfo->AvatarActor);
+		if(Character.IsValid())
+		{
+			Character->ActivateCurrentWeapon();
+		}
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

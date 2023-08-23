@@ -15,6 +15,6 @@ class PROTELUMTOY_API UProtelumAbility_PreviousWeapon : public UProtelumGameplay
 	GENERATED_BODY()
 
 	UProtelumAbility_PreviousWeapon();
-
+	//CanActivate? Todo: Future more dynamic depending on animations 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 };

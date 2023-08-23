@@ -37,6 +37,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	//This will be used to adjust the CameraLocation on Hit 
+	virtual FVector BlendLocations(const FVector& DesiredArmLocation, const FVector& TraceHitLocation, bool bHitSomething, float DeltaTime) override;
+
+	TWeakObjectPtr<AActor> OwnerLocation;
 private:
 	ECameraPositionState CameraPositionState = ECameraPositionState::CPS_Set;
 

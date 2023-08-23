@@ -17,10 +17,10 @@
 #include "ProtelumBaseClasses/ProtelumPlayerState.h"
 
 
-static FAutoConsoleCommand CVarChangeAbility(TEXT("GASTest.Character.AbilitySystem.GiveAbilityToCharacter"), TEXT("None\n"),
+static FAutoConsoleCommand CVarChangeAbility(TEXT("AbilitySystem.GiveAbilityToCharacter"), TEXT("None\n"),
 	FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
 	{
-		FString ServerCommand = TEXT("GASTest.Character.AbilitySystem.GiveAbilityToCharacter");
+		FString ServerCommand = TEXT("AbilitySystem.GiveAbilityToCharacter");
 		//New Ability
 		if(!Args.IsValidIndex(0))
 		{
@@ -117,7 +117,9 @@ static FAutoConsoleCommand CVarChangeAbility(TEXT("GASTest.Character.AbilitySyst
 		}
 		UAbilitySystemComponent* AbilitySystemComponent = GasCharacter->GetAbilitySystemComponent();
 		if(AbilitySystemComponent == nullptr) return;
-		AbilitySystemComponent->GiveAbility(GasCharacter->FindOwnableAbilityByTag(NewAbility));
+		FGameplayAbilitySpec TempSpec = FGameplayAbilitySpec(GasCharacter->FindOwnableAbilityByTag(NewAbility), 1.0f, INDEX_NONE);
+		AbilitySystemComponent->GiveAbility(TempSpec);
+		//Todo: Rework this command cause tags changed and level is not handled
 	}),
 	ECVF_Default);
 
@@ -326,7 +328,7 @@ float AProtelumCharacterBase::GetCharacterLevel() const
 	{
 		return CharacterAttributeSet->GetCharacterLevel();
 	}
-	return 0.0f;
+	return 1.0f;
 }
 
 float AProtelumCharacterBase::GetXP() const
@@ -598,7 +600,7 @@ void AProtelumCharacterBase::ModifyBoundAbilities(const FGameplayAbilitySpec& Ab
 				}
 				return;
 			}
-			const TSubclassOf<UGameplayAbility> OldAbilityClass = FindOwnableAbilityByTag(OldAbilityTag);
+			const TSubclassOf<UProtelumGameplayAbility> OldAbilityClass = FindOwnableAbilityByTag(OldAbilityTag);
 			SlotToFill = FindAbilitySlotByDefaultObject(OldAbilityClass);
 			if(SlotToFill == FGameplayTag::EmptyTag)
 			{
@@ -622,12 +624,22 @@ void AProtelumCharacterBase::ModifyBoundAbilities(const FGameplayAbilitySpec& Ab
 	{
 		OldAbilitySlot = IsAbilityAlreadyBound(AbilitySpec, bAbilityIsAlreadyBound);
 	}
-	const FGameplayAbilitySpec OldAbilitySpec = ReplaceBoundAbilityBySlot(SlotToFill, AbilitySpec);
+	
+	const FGameplayAbilitySpecHandle OldAbilityHandle = ReplaceBoundAbilityBySlot(SlotToFill, AbilitySpec);;
+	FGameplayAbilitySpec* TempOldAbilitySpec = FindAbilitySpecByHandle(OldAbilityHandle);
+	FGameplayAbilitySpec OldAbilitySpec;
+	bool bSpecIsValid = false;
+	if(TempOldAbilitySpec)
+	{
+		OldAbilitySpec = *TempOldAbilitySpec;
+		bSpecIsValid = true;
+	}
+	
 	if(ProtelumAbilitySystem.IsValid())
 	{
-		ProtelumAbilitySystem->ClearAbility(OldAbilitySpec.Handle);
+		ProtelumAbilitySystem->ClearAbility(OldAbilityHandle);
 	}
-	if(bAbilityIsAlreadyBound && OldAbilitySlot != SlotToFill)
+	if(bAbilityIsAlreadyBound && OldAbilitySlot != SlotToFill && bSpecIsValid)
 	{
 		SetAbilitySlotToModify(OldAbilitySlot);
 		ProtelumAbilitySystem->GiveAbility(FGameplayAbilitySpec(OldAbilitySpec.Ability));
@@ -636,19 +648,22 @@ void AProtelumCharacterBase::ModifyBoundAbilities(const FGameplayAbilitySpec& Ab
 
 
 
-FGameplayTag AProtelumCharacterBase::FindAbilitySlotByDefaultObject(TSubclassOf<UGameplayAbility> AbilityToFind)
+FGameplayTag AProtelumCharacterBase::FindAbilitySlotByDefaultObject(TSubclassOf<UProtelumGameplayAbility> AbilityToFind)
 {
-	for(auto Ability : BoundAbilities)
+	for(const auto& Ability : BoundAbilities)
 	{
-		if(Ability.AbilitySpec.Ability == AbilityToFind.GetDefaultObject())
+		if(const FGameplayAbilitySpec* TempSpec = FindAbilitySpecByHandle(Ability.SpecHandle))
 		{
-			return Ability.SlotTag;
-		}
+			if(TempSpec->Ability == AbilityToFind.GetDefaultObject())
+			{
+				return Ability.SlotTag;
+			}
+		}		
 	}
 	return FGameplayTag::EmptyTag;
 }
 
-TSubclassOf<UGameplayAbility> AProtelumCharacterBase::FindOwnableAbilityByTag(FGameplayTag GameplayTag) const
+TSubclassOf<UProtelumGameplayAbility> AProtelumCharacterBase::FindOwnableAbilityByTag(FGameplayTag GameplayTag) const
 {
 	if(!IsValid(OwnableAbilityAsset))
 	{
@@ -665,10 +680,20 @@ FGameplayAbilitySpec* AProtelumCharacterBase::FindAbilitySpecBySlotTag(const FGa
 	{
 		if(Ability.SlotTag == SlotTag)
 		{
-			return &Ability.AbilitySpec;
+			return FindAbilitySpecByHandle(Ability.SpecHandle);
 		}
 	}
 	return nullptr;
+}
+
+FGameplayAbilitySpec* AProtelumCharacterBase::FindAbilitySpecByHandle(const FGameplayAbilitySpecHandle SpecHandle) const
+{
+	FGameplayAbilitySpec* TempSpec = nullptr;
+	if(ProtelumAbilitySystem.IsValid())
+	{
+		TempSpec = ProtelumAbilitySystem->FindAbilitySpecFromHandle(SpecHandle);
+	}
+	return TempSpec;
 }
 
 void AProtelumCharacterBase::IncreaseAbilityLevelBySlot(const FGameplayTag& SlotToLevel)
@@ -743,31 +768,35 @@ void AProtelumCharacterBase::DecreaseAbilityLevelBySlot(const FGameplayTag& Slot
 FGameplayTag AProtelumCharacterBase::IsAbilityAlreadyBound(const FGameplayAbilitySpec& AbilitySpec,
                                                            bool& bFoundBoundAbility)
 {
-	for(auto Ability : BoundAbilities)
+	for(const auto Ability : BoundAbilities)
 	{
-		if(Ability.AbilitySpec.Ability == AbilitySpec.Ability)
+		if(const FGameplayAbilitySpec* TempSpec = FindAbilitySpecByHandle(Ability.SpecHandle))
 		{
-			bFoundBoundAbility = true;
-			return Ability.SlotTag;
+			if(TempSpec->Ability == AbilitySpec.Ability)
+			{
+				bFoundBoundAbility = true;
+				return Ability.SlotTag;
+			}
 		}
 	}
 	return FGameplayTag::EmptyTag;
 }
 
-FGameplayAbilitySpec AProtelumCharacterBase::ReplaceBoundAbilityBySlot(const FGameplayTag SlotToFill,
-	const FGameplayAbilitySpec& AbilitySpec)
+FGameplayAbilitySpecHandle AProtelumCharacterBase::ReplaceBoundAbilityBySlot(const FGameplayTag SlotToFill,
+                                                                             const FGameplayAbilitySpec& AbilitySpec)
 {
+	FGameplayAbilitySpecHandle SpecHandleToRemove;
 	for(auto& Ability : BoundAbilities)
 	{
 		if(Ability.SlotTag == SlotToFill)
 		{
-			FGameplayAbilitySpec SpecToRemove = Ability.AbilitySpec;
+			SpecHandleToRemove = Ability.SpecHandle;
 			Ability.GameplayAbilityClass = AbilitySpec.Ability->StaticClass();
-			Ability.AbilitySpec = AbilitySpec;
-			return SpecToRemove;
+			Ability.SpecHandle = AbilitySpec.Handle;
+			break;
 		}
 	}
-	return nullptr;
+	return SpecHandleToRemove;
 }
 
 void AProtelumCharacterBase::BindAbilityToInput(const FGameplayAbilitySpec& AbilitySpecToBind)
@@ -782,7 +811,7 @@ void AProtelumCharacterBase::BindAbilityToInput(const FGameplayAbilitySpec& Abil
 	for (const FGameplayAbilityInfo& BindInfo : BoundAbilities)
 	{
 		// if(BindInfo.GameplayAbilityClass == Spec.Ability.GetClass()) useful for replacing empty ability slots
-		if(BindInfo.AbilitySpec.Handle == AbilitySpecToBind.Handle)
+		if(BindInfo.SpecHandle == AbilitySpecToBind.Handle)
 		{
 			ProtelumPlayerController->SetInputBinding(BindInfo.InputAction.LoadSynchronous(), AbilitySpecToBind.Handle);
 			break;
@@ -856,7 +885,6 @@ void AProtelumCharacterBase::LoadBoundAbilities()
 	}
 	for(auto Ability : AbilityBindingAsset->GetAbilities())
 	{
-		Ability.AbilitySpec = GenerateAssociatedAbilitySpec(Ability.GameplayAbilityClass);
 		BoundAbilities.Add(Ability);
 	}
 	EmptyGameplayAbilityClass = AbilityBindingAsset->GetEmptyAbilityClass();
@@ -880,7 +908,8 @@ void AProtelumCharacterBase::LoadOwnableAbilities()
 
 void AProtelumCharacterBase::AddCharacterStartAbilities()
 {
-	// Grant abilities, but only on the server	
+	// Grant abilities, but only on the server
+	//Todo: maybe do it like we do it with every other ability just grant and add to BoundAbilities on the Fly
 	if (GetLocalRole() != ROLE_Authority || !ProtelumAbilitySystem.IsValid() || bCharacterStartAbilitiesGiven)
 	{
 		return;
@@ -889,22 +918,37 @@ void AProtelumCharacterBase::AddCharacterStartAbilities()
 	{
 		for(auto& AbilityToAdd : BoundAbilities)
 		{
-			ProtelumAbilitySystem->GiveAbility(AbilityToAdd.AbilitySpec);
+			FGameplayAbilitySpec TempSpec = FGameplayAbilitySpec(AbilityToAdd.GameplayAbilityClass, GetCharacterLevel(), INDEX_NONE);
+			AbilityToAdd.SpecHandle = TempSpec.Handle;
+			ProtelumAbilitySystem->GiveAbility(TempSpec);
 		}
 	}
-	AddWeaponAbilities();
+	AddBaseAttackAbilities();
+	AddAlwaysActiveAbilities();
+	AddAbilitiesWithoutInputBindingToLoadOnStartup();
 	bCharacterStartAbilitiesGiven = true;
 }
 
-void AProtelumCharacterBase::AddWeaponAbilities()
+void AProtelumCharacterBase::AddBaseAttackAbilities()
 {
-	for(auto& AbilityToAdd : WeaponAttackAbilitiesToInitialize)
+	for(auto& AbilityToAdd : StartupBaseAttackAbilities)
 	{
 		ProtelumAbilitySystem->GiveAbility(FGameplayAbilitySpec(AbilityToAdd, GetCharacterLevel(), INDEX_NONE));
 	}
 }
 
-FGameplayAbilitySpec AProtelumCharacterBase::GenerateAssociatedAbilitySpec(TSubclassOf<UProtelumGameplayAbility> AbilityToSpec) const
+void AProtelumCharacterBase::AddAlwaysActiveAbilities()
 {
-	return FGameplayAbilitySpec(AbilityToSpec, GetCharacterLevel(), INDEX_NONE);
+	for(auto& AbilityToAdd : AlwaysActiveAbilities)
+	{
+		ProtelumAbilitySystem->GiveAbility(FGameplayAbilitySpec(AbilityToAdd, GetCharacterLevel(), INDEX_NONE));
+	}
+}
+
+void AProtelumCharacterBase::AddAbilitiesWithoutInputBindingToLoadOnStartup()
+{
+	for(auto& AbilityToAdd : AbilitiesWithoutInputBindingToLoadOnStartup)
+	{
+		ProtelumAbilitySystem->GiveAbility(FGameplayAbilitySpec(AbilityToAdd, GetCharacterLevel(), INDEX_NONE));
+	}
 }

@@ -16,16 +16,22 @@ void UProtelumAbility_ShoulderSwitch::ActivateAbility(const FGameplayAbilitySpec
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-	const TWeakObjectPtr<AProtelumCharacter> Character = Cast<AProtelumCharacter>(ActorInfo->AvatarActor);
-	if(Character.IsValid())
+	if (HasAuthorityOrPredictionKey(ActorInfo, &ActivationInfo))
 	{
-		const TWeakObjectPtr<UProtelumSpringArmComponent> SpringArmComponent = Character->GetSpringArm();
-		if(SpringArmComponent.IsValid())
+		if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 		{
-			SpringArmComponent->OffsetSet.BindUObject(this, &UProtelumAbility_ShoulderSwitch::EndAbility, Handle, ActorInfo, ActivationInfo, true, false);
-			SpringArmComponent->SwitchSpringArmShoulder();
+			return;
+		}
+	
+		const TWeakObjectPtr<AProtelumCharacter> Character = Cast<AProtelumCharacter>(ActorInfo->AvatarActor);
+		if(Character.IsValid())
+		{
+			const TWeakObjectPtr<UProtelumSpringArmComponent> SpringArmComponent = Character->GetSpringArm();
+			if(SpringArmComponent.IsValid())
+			{
+				SpringArmComponent->OffsetSet.BindUObject(this, &UProtelumAbility_ShoulderSwitch::EndAbility, Handle, ActorInfo, ActivationInfo, true, false);
+				SpringArmComponent->SwitchSpringArmShoulder();
+			}
 		}
 	}
 }

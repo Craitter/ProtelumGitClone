@@ -16,4 +16,6 @@ class PROTELUMTOY_API UProtelumAbility_BaseAttack : public UProtelumGameplayAbil
 	UProtelumAbility_BaseAttack();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
+	//CanActivate? Todo: Future more dynamic depending on animations 
 };

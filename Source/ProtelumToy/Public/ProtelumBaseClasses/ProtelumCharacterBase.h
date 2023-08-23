@@ -38,14 +38,12 @@ public:
 	virtual void OnRep_PlayerState() override;
 	virtual void OnRep_Controller() override;
 	
-	
-	
 	//Begin AbilityBindingInterface
 	virtual void BindAbility(FGameplayAbilitySpec& AbilitySpec) override;
 	virtual void UnbindAbility(FGameplayAbilitySpec& AbilitySpec) override;
 	//End AbilityBindingInterface
 
-	bool IsAlive() const;
+	
 	//Begin AbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	//End AbilitySystemInterface
@@ -59,8 +57,9 @@ public:
 
 	//Begin AttributeChangedCallbacks
 	void OnRequestSetMoveSpeed(float NewMoveSpeed) const;
+	//End AttributeChangedCallback
 	
-	//Begin Attribute Getter
+	//Begin Character Attribute Getter
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Character")
 	float GetMoveSpeed() const;
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Character")
@@ -73,7 +72,7 @@ public:
 	float GetGold() const;
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Character")
 	float GetGoldBounty() const;
-	//End Attribute Getter
+	//End Character Attribute Getter
 
 	//Begin Health Attribute Getter
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Health")
@@ -92,7 +91,7 @@ public:
 	float GetCriticalHitResistance() const;
 	//End Health Attribute Getter
 
-	//Begin Attribute Getter
+	//Begin Shaman Attribute Getter
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|ShamanWeapon")
 	float GetDamageProjectileMaxAmmo() const;
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|ShamanWeapon")
@@ -109,7 +108,7 @@ public:
 	float GetHealProjectileRegeneration() const;
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|ShamanWeapon")
 	float GetProjectileHeal() const;
-	//End Attribute Getter
+	//End Shaman Attribute Getter
 
 	//Begin Attacker Attribute Getter
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Attacker")
@@ -120,16 +119,21 @@ public:
 	float GetResistancePenetration() const;
 	//End Attacker Attribute Getter
 
-	//Global Setter and Getter To Modify BoundAbilities
+	bool IsAlive() const;
+
+	//Begin Global Setter and Getter To Modify Bound Abilities
 	void SetAbilitySlotToModify(FGameplayTag AbilitySlotToModify);
 	FGameplayTag GetAbilitySlotToModify();
 	void SetAbilityToReplace(FGameplayTag AbilityToReplace);
 	FGameplayTag GetAbilityToReplace();
+	//End Global Setter and Getter To Modify Bound Abilities
 
 	//Is only here Because the DebugCommand needs it right now
-	TSubclassOf<UGameplayAbility> FindOwnableAbilityByTag(const FGameplayTag GameplayTag) const;
+	TSubclassOf<UProtelumGameplayAbility> FindOwnableAbilityByTag(const FGameplayTag GameplayTag) const;
 
 	FGameplayAbilitySpec* FindAbilitySpecBySlotTag(const FGameplayTag SlotTag);
+
+	FGameplayAbilitySpec* FindAbilitySpecByHandle(const FGameplayAbilitySpecHandle SpecHandle) const;
 	
 	void IncreaseAbilityLevelBySlot(const FGameplayTag& SlotToLevel);
 	void DecreaseAbilityLevelBySlot(const FGameplayTag& SlotToLevel);
@@ -146,7 +150,13 @@ private:
 	TArray<TSubclassOf<UGameplayEffect>> StartupEffects = {nullptr};
 
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
-	TArray<TSubclassOf<UProtelumGameplayAbility>> WeaponAttackAbilitiesToInitialize;
+	TArray<TSubclassOf<UProtelumGameplayAbility>> StartupBaseAttackAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TArray<TSubclassOf<UProtelumGameplayAbility>> AlwaysActiveAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TArray<TSubclassOf<UProtelumGameplayAbility>> AbilitiesWithoutInputBindingToLoadOnStartup;
 	
 	//This Asset Structures the AbilityBinding in BeginPlay on Game first start
 	UPROPERTY(EditAnywhere, Category = "Abilities")
@@ -158,7 +168,7 @@ private:
 	UPROPERTY()//Only on Server Cheap way to Store the OwnableAbilities
 	FGameplayTagContainer OwnableAbilityClassTags;// Maybe FOwnedAbilities, if we ever want to change it
 
-	//Todo: Make this save Handles instead of Specs
+	
 	//This is the Runtime BoundAbilityArray, Before ASC->GiveAbility we want to change the BoundAbilitiesArray
 	UPROPERTY(Replicated)
 	TArray<FGameplayAbilityInfo> BoundAbilities;
@@ -173,13 +183,15 @@ private:
 	
 	TWeakObjectPtr<UCharacterAttributeSet> CharacterAttributeSet = {nullptr};
 	TWeakObjectPtr<UHealthAttributeSet> HealthAttributeSet = {nullptr};
-	TWeakObjectPtr<UShamanWeaponAttributeSet> ShamanWeaponAttributeSet = {nullptr};
+	TWeakObjectPtr<UShamanWeaponAttributeSet> ShamanWeaponAttributeSet = {nullptr}; //Todo maybe solve this with Inheritance
 	TWeakObjectPtr<UAttackerAttributeSet> AttackerAttributeSet = {nullptr};
 
+
+	//Begin Ability Binding Functions and Variables
+	
 	//GlobalVariable to Swap a TargetedAbilitySlots Ability
 	UPROPERTY()
 	FGameplayTag TargetedAbilitySlot = FGameplayTag::EmptyTag;
-
 	//GlobalVariable to Replace an SpecificAbility
 	UPROPERTY()
 	FGameplayTag TargetedAbility = FGameplayTag::EmptyTag;
@@ -188,14 +200,15 @@ private:
 	
 	bool IsGivenAbilityOwnable(const FGameplayAbilitySpec& AbilitySpec) const;
 	void ModifyBoundAbilities(const FGameplayAbilitySpec& AbilitySpec);
-	FGameplayTag FindAbilitySlotByDefaultObject(TSubclassOf<UGameplayAbility> AbilityToFind);
+	FGameplayTag FindAbilitySlotByDefaultObject(TSubclassOf<UProtelumGameplayAbility> AbilityToFind);
 	// TSubclassOf<UGameplayAbility> FindOwnableAbilityByTag(const FGameplayTag GameplayTag) const;
 	FGameplayTag IsAbilityAlreadyBound(const FGameplayAbilitySpec& AbilitySpec, bool& bFoundBoundAbility);
-	FGameplayAbilitySpec ReplaceBoundAbilityBySlot(const FGameplayTag SlotToFill,
-													const FGameplayAbilitySpec& AbilitySpec);
-	
-	
+	//This should only be called when it is safe to do so There is a slot with this
+	//GameplayTag and there is any Ability bound
+	FGameplayAbilitySpecHandle ReplaceBoundAbilityBySlot(const FGameplayTag SlotToFill,
+	                                                     const FGameplayAbilitySpec& AbilitySpec);
 	void BindAbilityToInput(const FGameplayAbilitySpec& AbilitySpecToBind);
+	//End Ability Binding Functions and Variables
 	
 	// Initialize the Character's attributes. Must run on Server but we run it on Client too
 	// so that we don't have to wait. The Server's replication to the Client won't matter since
@@ -215,8 +228,7 @@ private:
 	void AddCharacterStartAbilities();
 	bool bCharacterStartAbilitiesGiven = false;
 
-	void AddWeaponAbilities();
-
-	//Todo: Make this keeping Handles
-	FGameplayAbilitySpec GenerateAssociatedAbilitySpec(TSubclassOf<UProtelumGameplayAbility> AbilityToSpec) const;
+	void AddBaseAttackAbilities();
+	void AddAlwaysActiveAbilities();
+	void AddAbilitiesWithoutInputBindingToLoadOnStartup();
 };

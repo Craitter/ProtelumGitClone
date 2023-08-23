@@ -1,0 +1,13 @@
+Key,SourceString,Comment
+menu_cancel,Cancel,"verb, stops an action and returns"
+menu_host,Host,"verb, host game "
+menu_join,Join,"verb, join a hosted game"
+menu_settings,Settings,"noun, Game Settings e.g. ""Graphics"", ""Sound"",""KeyMapping"""
+menu_stats,Stats,"noun, Game statistics e.g. ""Kills"",""MetersWalked"",""TimePlayed"""
+menu_return_mainmenu,Return to Main Menu,
+menu_return_desktop,Return to Desktop,
+menu_continue,Continue,"verb, confirm an action and go on to the next"
+menu_quit,Quit Game,"verb, return to desktop"
+menu_server_select,Select Server,
+menu_server_invalid,Invalid Server,
+menu_server_loading,Loading...,

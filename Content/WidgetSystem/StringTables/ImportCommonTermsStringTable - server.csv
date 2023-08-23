@@ -1,0 +1,23 @@
+Key,SourceString,Comment
+server_chat_voice,Voice Chat,noun
+server_name,Server Name,"noun, player enters the name"
+server_password,Password,"noun, player enters password"
+server_mode,Mode,"noun, (choices: Tutorial and Normal)"
+server_mode_normal,Normal,will start the normal game
+server_mode_tutorial,Tutorial,will start the tutorial game
+server_level_min,Min Level,minimal level a character has to have to be able to join
+server_level_max,Max Level,maximal level a character has to have to be able to join
+server_privacy,Privacy,"references lobby visibility to joining persons (public, friends only, invite only)"
+server_privacy_public,Public,Lobby appears in public server list
+server_privacy_friends,Friends Only,Lobby appears in friends server list
+server_privacy_invite,Invite Only,"Lobby does not appear, people have to be invited"
+server_privacy_no_password,No Password,
+server_show_all,Show All,
+server_level_range,{min_level} - {max_level},
+server_password_wrong,Wrong Password,
+server_name_default,{username}'s Game,
+server_level_allowed,Allowed Level,
+server_filter_apply,Filter Server List,
+server_class_required,Required Character Class,
+server_refresh,Refresh,
+server_restrictions,Server Restrictions,

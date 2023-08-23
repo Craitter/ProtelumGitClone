@@ -1,0 +1,16 @@
+Key,SourceString,Comment
+prompt_yes,Yes,Confirm prompt question
+prompt_no,No,Cancel prompt question
+prompt_ok,Ok,accept prompt
+prompt_quitgame,Do you really want to return to desktop?,LineBreak at XX characters
+prompt_mainmenu,Do you really want to return to main menu?,LineBreak at XX characters
+prompt_character_delete,Do you really want to delete this character? This action can not be undone!,LineBreak at XX characters
+prompt_no_symbols,"The name can only contain the alphabet, numbers 0-9 and underscore!","LineBreak at XX characters, alphabet = abc...xyz, no linebreak"
+prompt_duplicated_name,You have already created a character with that name!,LineBreak at XX characters
+prompt_max_characters_reached,You can only have 50 characters!,LineBreak at XX characters
+prompt_name_size,The name has to have more than 2 and less than 16 characters!,LineBreak at XX characters
+prompt_server_password,Please enter the Password for the Server ,LineBreak at XX characters
+prompt_server_invalid,The Server is either full or offline. The list will automatically refresh.,
+prompt_server_no_selection,You have not selected a Server yet.,
+prompt_character_mismatch,The Character does not meet the Server Requirements! Please Choose a different Server or Character...,
+prompt_password_enter,Enter Password,

@@ -1,0 +1,5 @@
+Key,SourceString,Comment
+interact_pickup_hold,Hold {key} to Pickup {noun},
+interact_pickup_press,Press {key} to Pickup {noun},
+interact_open_hold,Hold {key} to Open {noun},
+interact_open_press,Press {key} to Open {noun},

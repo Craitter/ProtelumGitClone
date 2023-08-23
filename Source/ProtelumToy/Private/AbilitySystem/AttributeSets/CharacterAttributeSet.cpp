@@ -3,6 +3,7 @@
 
 #include "AbilitySystem/AttributeSets/CharacterAttributeSet.h"
 
+#include "GameplayEffectAggregatorLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
 #include "ProtelumBaseClasses/ProtelumCharacterBase.h"
@@ -37,9 +38,26 @@ void UCharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModC
 	Super::PostGameplayEffectExecute(Data);
 }
 
+void UCharacterAttributeSet::OnAttributeAggregatorCreated(const FGameplayAttribute& Attribute,
+	FAggregator* NewAggregator) const
+{
+	Super::OnAttributeAggregatorCreated(Attribute, NewAggregator);
+
+	if (!NewAggregator)
+	{
+		return;
+	}
+
+	if (Attribute == GetMoveSpeedAttribute())
+	{
+		UE_LOG(LogTemp, Warning , TEXT(" %s() is movespeed"),  *FString(__FUNCTION__));
+		NewAggregator->EvaluationMetaData = &FAggregatorEvaluateMetaDataLibrary::MostNegativeMod_AllPositiveMods;
+	}
+}
+
 void UCharacterAttributeSet::AdjustAttributeForMaxChange(const FGameplayAttributeData& AffectedAttribute,
-	const FGameplayAttributeData& MaxAttribute, float NewMaxValue,
-	const FGameplayAttribute& AffectedAttributeProperty) const
+                                                         const FGameplayAttributeData& MaxAttribute, float NewMaxValue,
+                                                         const FGameplayAttribute& AffectedAttributeProperty) const
 {
 	
 }

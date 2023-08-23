@@ -8,6 +8,7 @@
 #include "AbilitySystem/AttributeSets/HealthAttributeSet.h"
 #include "AbilitySystem/AttributeSets/ShamanWeaponAttributeSet.h"
 #include "ProtelumBaseClasses/ProtelumCharacter.h"
+#include "Subsystems/UISubsystem.h"
 
 AProtelumPlayerState::AProtelumPlayerState()
 {
@@ -28,6 +29,23 @@ AProtelumPlayerState::AProtelumPlayerState()
 	MaxHealAmmo = FGameplayTag::RequestGameplayTag("Data.Shaman.Ammo.MaxHeal");
 	MaxDamageAmmo = FGameplayTag::RequestGameplayTag("Data.Shaman.Ammo.MaxDamage");
 }
+
+// void AProtelumPlayerState::ClientInitialize(AController* C)
+// {
+// 	Super::ClientInitialize(C);
+// 	if(C != nullptr && C->IsLocalPlayerController())
+// 	{
+// 		const TWeakObjectPtr<UGameInstance> GameInstance = GetGameInstance();
+// 		if(GameInstance.IsValid())
+// 		{
+// 			const TWeakObjectPtr<UUISubsystem> UISubsystem = GameInstance->GetSubsystem<UUISubsystem>();
+// 			if(UISubsystem.IsValid())
+// 			{
+// 				UISubsystem->LoadInterfaceBaseWidget(EBaseWidgetType::None);
+// 			}
+// 		}
+// 	}
+// }
 
 void AProtelumPlayerState::BeginPlay()
 {
@@ -157,14 +175,7 @@ void AProtelumPlayerState::DamageProjectileMaxAmmoChanged(const FOnAttributeChan
 
 void AProtelumPlayerState::DamageProjectileAmmoChanged(const FOnAttributeChangeData& Data)
 {
-	if(FMath::IsNearlyEqual(Data.NewValue, GetDamageProjectileMaxAmmo()) && IsValid(ProtelumAbilitySystem))
-	{
-		ProtelumAbilitySystem->AddReplicatedLooseGameplayTag(MaxDamageAmmo);
-	}
-	else if(FMath::IsNearlyEqual(Data.OldValue, GetDamageProjectileMaxAmmo()) && IsValid(ProtelumAbilitySystem))
-	{
-		ProtelumAbilitySystem->RemoveReplicatedLooseGameplayTag(MaxDamageAmmo);
-	}
+	// UE_LOG(LogTemp, Warning , TEXT("%s %s() Damage Ammo %f"), *UEnum::GetValueAsString(GetLocalRole()), *FString(__FUNCTION__), Data.NewValue);
 }
 
 void AProtelumPlayerState::DamageProjectileRegenerationChanged(const FOnAttributeChangeData& Data)
@@ -181,14 +192,7 @@ void AProtelumPlayerState::HealProjectileMaxAmmoChanged(const FOnAttributeChange
 
 void AProtelumPlayerState::HealProjectileAmmoChanged(const FOnAttributeChangeData& Data)
 {
-	if(FMath::IsNearlyEqual(Data.NewValue, GetHealProjectileMaxAmmo()) && IsValid(ProtelumAbilitySystem))
-	{
-		ProtelumAbilitySystem->AddLooseGameplayTag(MaxHealAmmo);
-	}
-	else if(FMath::IsNearlyEqual(Data.OldValue, GetHealProjectileMaxAmmo()) && IsValid(ProtelumAbilitySystem))
-	{
-		ProtelumAbilitySystem->RemoveLooseGameplayTag(MaxHealAmmo);
-	}
+	// UE_LOG(LogTemp, Warning , TEXT("%s %s() Heal Ammo %f"), *UEnum::GetValueAsString(GetLocalRole()), *FString(__FUNCTION__), Data.NewValue);
 }
 
 void AProtelumPlayerState::HealProjectileRegenerationChanged(const FOnAttributeChangeData& Data)

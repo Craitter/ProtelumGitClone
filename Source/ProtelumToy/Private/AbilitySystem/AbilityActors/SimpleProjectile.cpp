@@ -45,13 +45,7 @@ ASimpleProjectile::ASimpleProjectile()
 	}
 }
 
-void ASimpleProjectile::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-}
 
-
-// Called when the game starts or when spawned
 void ASimpleProjectile::BeginPlay()
 {
 	Super::BeginPlay();
@@ -65,11 +59,6 @@ void ASimpleProjectile::BeginPlay()
 			SourceASC = ASI->GetAbilitySystemComponent();
 		}
 	}
-}
-
-void ASimpleProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
 }
 
 void ASimpleProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -120,12 +109,6 @@ void ASimpleProjectile::ConfigureProjectile(
 	SetProjectileVelocity();
 	SetLifeSpan(ProjectileLifeSpan);
 	ActivateCollisions();
-}
-
-// Called every frame
-void ASimpleProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ASimpleProjectile::ConfirmByInstigator()
@@ -185,7 +168,7 @@ void ASimpleProjectile::HandleCollision(const TWeakObjectPtr<AActor> CollisionAc
 	default: ;
 	}
 	
-	DestroyProjectile();
+	DestroyProjectile(false);
 }
 
 void ASimpleProjectile::SetProjectileColor()
@@ -200,6 +183,11 @@ void ASimpleProjectile::SetProjectileColor()
 	}
 	DynamicMaterial->SetVectorParameterValue(FName("Emissive_Color"), ProjectileColor);
 	Mesh->SetMaterial(0, DynamicMaterial);
+
+	// if(IsValid(NiagaraSystem))
+	// {
+	// 	NiagaraSystem->SetColorParameter("Color", ProjectileColor);
+	// }
 }
 
 void ASimpleProjectile::SetProjectileVelocity() const
@@ -227,12 +215,12 @@ void ASimpleProjectile::OnHitCallback(UPrimitiveComponent* HitComp, AActor* Othe
 {
 	if(OtherActor == GetInstigator())
 	{
-		DestroyProjectile();
+		DestroyProjectile(false);
 		return;
 	}
 	if(GetLocalRole() != ROLE_Authority)
 	{
-		DestroyProjectile();;
+		DestroyProjectile(false);;
 		return;
 	}
 	HandleCollision(OtherActor, Hit);
@@ -247,7 +235,7 @@ void ASimpleProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 	}
 	if(GetLocalRole() != ROLE_Authority)
 	{
-		DestroyProjectile();;
+		DestroyProjectile(false);;
 		return;
 	}
 	HandleCollision(OtherActor, SweepResult);
@@ -274,6 +262,7 @@ void ASimpleProjectile::CallbackLifeSpawnEnds(const FVector& ActorLocation, bool
 	{
 		HandleCollision(nullptr, FHitResult());
 	}
+	
 }
 
 void ASimpleProjectile::Explode() const
@@ -337,7 +326,7 @@ void ASimpleProjectile::ApplyEffectsAfterHit(const TWeakObjectPtr<UAbilitySystem
 {
 	ApplyEffectsToASC(TargetASC, EffectsToApplyToTarget);
 
-	ApplyEffectsToASC(TargetASC, EffectsToApplyToInstigator);
+	ApplyEffectsToASC(SourceASC, EffectsToApplyToInstigator);
 }
 
 void ASimpleProjectile::ApplyEffectsToASC(const TWeakObjectPtr<UAbilitySystemComponent> ASC,
@@ -357,14 +346,14 @@ void ASimpleProjectile::ApplyEffectsToASC(const TWeakObjectPtr<UAbilitySystemCom
 	}
 }
 
-void ASimpleProjectile::DestroyProjectile()
+void ASimpleProjectile::DestroyProjectile(bool NetForce)
 {
 	//Todo: Things to do before destroying
-	Destroy();
+	Destroy(NetForce);
 }
 
 void ASimpleProjectile::PreDestroyFromReplication()
 {
-	DestroyProjectile();
+	DestroyProjectile(true);
 	Super::PreDestroyFromReplication();
 }

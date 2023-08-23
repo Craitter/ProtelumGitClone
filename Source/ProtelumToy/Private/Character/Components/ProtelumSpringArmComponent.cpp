@@ -53,3 +53,28 @@ void UProtelumSpringArmComponent::BeginPlay()
 	StartOffset = SocketOffset;
 	TargetOffset = SocketOffset;
 }
+
+FVector UProtelumSpringArmComponent::BlendLocations(const FVector& DesiredArmLocation, const FVector& TraceHitLocation,
+	bool bHitSomething, float DeltaTime)
+{
+	// Super::BlendLocations(DesiredArmLocation, TraceHitLocation, bHitSomething, DeltaTime);
+	if(!bHitSomething)
+	{
+		return Super::BlendLocations(DesiredArmLocation, TraceHitLocation, bHitSomething, DeltaTime);
+	}
+	const FVector SpringArmSocketLocation = GetRelativeLocation() + GetOwner()->GetActorLocation();
+	const FVector CameraSocketLocation = GetSocketLocation(SocketName);
+	const FVector CameraToPlayerVector = (SpringArmSocketLocation - CameraSocketLocation).GetSafeNormal();
+	const FVector CameraToDesiredVector = (DesiredArmLocation - CameraSocketLocation).GetSafeNormal();
+	const float DotResult = FVector::DotProduct(CameraToPlayerVector, CameraToDesiredVector);
+	if(DotResult <= 0.0f)
+	{
+		// UE_LOG(LogTemp, Warning , TEXT("%s() CameraBlockWasBehindCamera"), *FString(__FUNCTION__));
+	}
+	else
+	{
+		//Todo: Find a way to handle both cases
+		// UE_LOG(LogTemp, Warning , TEXT("%s() CameraBlockWasBeforeCamera"), *FString(__FUNCTION__));
+	}
+	return  TraceHitLocation;
+}

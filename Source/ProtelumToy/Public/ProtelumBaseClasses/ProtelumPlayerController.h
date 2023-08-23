@@ -37,14 +37,20 @@ class PROTELUMTOY_API AProtelumPlayerController : public APlayerController
 public:
 	AProtelumPlayerController();
 	virtual void Tick(float DeltaSeconds) override;
-	
+	virtual void ReceivedGameModeClass(TSubclassOf<AGameModeBase> GameModeClass) override;
 	virtual void OnRep_Pawn() override;
+	// virtual void OnRep_Owner() override;
 protected:
+	virtual void PostActorCreated() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
 public:
+	void ActivateMenuInput(const FInputModeGameAndUI& Mode);
+	void ActivateGameInput();
+	void ActivateInventoryInput(const FInputModeGameAndUI& Mode);
+	
 	// bool IsConfirmCancel(const TObjectPtr<UInputAction>& Object) const;
 	void SetInputBinding(TObjectPtr<UInputAction> InputAction, FGameplayAbilitySpecHandle AbilitySpecHandle);
 	void ClearInputBinding(FGameplayAbilitySpecHandle AbilitySpecHandle);
@@ -78,9 +84,15 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> IACancel = {nullptr};
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TSoftObjectPtr<UInputMappingContext> MKInventoryIMC;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TSoftObjectPtr<UInputMappingContext> DefaultIMC;
+	TSoftObjectPtr<UInputMappingContext> MKMenuIMC;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TSoftObjectPtr<UInputMappingContext> MKGameIMC;
 	
 	//This will be added OnWaitingForConfirmInputBegin();
 	UPROPERTY(EditDefaultsOnly, Category = "Input")

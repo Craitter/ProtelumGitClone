@@ -24,7 +24,7 @@ class PROTELUMTOY_API AP_GATA_GroundDeploy : public AGameplayAbilityTargetActor
 	GENERATED_BODY()
 public:
 	AP_GATA_GroundDeploy();
-	
+	//This sets the values for the Calculation of this TargetActor
 	UFUNCTION(BlueprintCallable)
 	void Configure(
 	UPARAM(DisplayName = "StartLocation") const FGameplayAbilityTargetingLocationInfo& InStartLocation,
@@ -54,7 +54,6 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
 	
 	virtual void Tick(float DeltaSeconds) override;
 

@@ -52,7 +52,6 @@ void ADeployActor::BeginPlay()
 		DamageResistanceDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(HealthAttributeSet->GetDamageResistanceAttribute()).AddUObject(this, &ADeployActor::DamageResistanceChanged);
 		CriticalHitResistanceChangedDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(HealthAttributeSet->GetCriticalHitResistanceAttribute()).AddUObject(this, &ADeployActor::CriticalHitResistanceChanged);
 		ShieldRegenerationRateChangedDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(HealthAttributeSet->GetShieldRegenerationRateAttribute()).AddUObject(this, &ADeployActor::ShieldRegenerationRateChanged);
-		
 		//End Binding Delegates On CharacterAttributeValueChanged
 		
 		//Begin Binding Delegates On AttributeValueChanged
@@ -61,18 +60,19 @@ void ADeployActor::BeginPlay()
 	}
 	
 }
-
+//This is responsible for wall visual changes depending on Health
 void ADeployActor::HealthChanged(const FOnAttributeChangeData& Data)
 {
+	if(GetMaxHealth() <= 0.0f)
+	{
+		return;
+	}
 	// UE_LOG(LogTemp, Warning , TEXT("WallHealth %f"), Data.NewValue);
 	if(Data.NewValue <= 0.0f)
 	{
 		Destroy();
 	}
-	if(GetMaxHealth() <= 0.0f)
-	{
-		return;
-	}
+
 	const float HealthPercentage = Data.NewValue / GetMaxHealth();
 	if(IsValid(DynamicMeshMaterial))
 	{
@@ -118,11 +118,7 @@ void ADeployActor::LifeTimeChanged(const FOnAttributeChangeData& Data)
 	GetWorldTimerManager().SetTimer(DestroyHandle, this, &ADeployActor::OnLifeTimeEnd, Data.NewValue);
 }
 
-// Called every frame
-void ADeployActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
+
 
 bool ADeployActor::IsAlive() const
 {

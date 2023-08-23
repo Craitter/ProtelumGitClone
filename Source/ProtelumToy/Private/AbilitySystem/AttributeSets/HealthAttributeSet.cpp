@@ -223,6 +223,12 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 	
 }
 
+// void UHealthAttributeSet::OnAttributeAggregatorCreated(const FGameplayAttribute& Attribute,
+// 	FAggregator* NewAggregator) const
+// {
+// 	Super::OnAttributeAggregatorCreated(Attribute, NewAggregator);
+// }
+
 void UHealthAttributeSet::AdjustAttributeForMaxChange(const FGameplayAttributeData& AffectedAttribute,
                                                       const FGameplayAttributeData& MaxAttribute, float NewMaxValue,
                                                       const FGameplayAttribute& AffectedAttributeProperty) const

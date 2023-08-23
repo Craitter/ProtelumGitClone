@@ -34,9 +34,11 @@ protected:
 	FDelegateHandle CriticalHitResistanceChangedDelegateHandle;
 	FDelegateHandle ShieldRegenerationRateChangedDelegateHandle;
 	//End Health AttributeChangedDelegate
-	FDelegateHandle LifeTimeChangedDelegateHandle;
 
-	FTimerHandle DestroyHandle;
+	//Begin StaticActor AttributeChangedDelegate
+	FDelegateHandle LifeTimeChangedDelegateHandle;
+	//End StaticActor AttributeChangedDelegate
+	
 	
 	//Begin Health AttributeChangedCallbacks
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
@@ -47,12 +49,13 @@ protected:
 	virtual void CriticalHitResistanceChanged(const FOnAttributeChangeData& Data);
 	virtual void ShieldRegenerationRateChanged(const FOnAttributeChangeData& Data);
 	//End Health AttributeChangedCallbacks
-	
-	virtual void LifeTimeChanged(const FOnAttributeChangeData& Data);
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
+	//Begin StaticActor AttributeChangedCallbacks
+	virtual void LifeTimeChanged(const FOnAttributeChangeData& Data);
+	//End StaticActor AttributeChangedCallbacks
+	
+	FTimerHandle DestroyHandle;
+public:
 	bool IsAlive() const;
 
 	//Begin Health Attribute Getter
@@ -71,8 +74,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Health")
 	float GetCriticalHitResistance() const;
 	//End Health Attribute Getter
+	
+	//Begin StaticActor Attribute Getter
 	UFUNCTION(BlueprintCallable, Category = "Protelum|AbilitySystem|AttributeSet|Deployable")
 	float GetLifeTime() const;
+	//End StaticActor Attribute Getter
 
 	//Begin IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -84,18 +90,20 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> Mesh = {nullptr};
+		
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> DefaultAttributes = {nullptr};
+	
+private:
+	
+	void OnLifeTimeEnd();
+	//Material of the MeshRootComponent
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> DynamicMeshMaterial = {nullptr};
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticActorAttributeSet> StaticActorAttributeSet = {nullptr};
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UHealthAttributeSet> HealthAttributeSet = {nullptr};
-
-	void OnLifeTimeEnd();
-
-	UPROPERTY()
-	TObjectPtr<UMaterialInstanceDynamic> DynamicMeshMaterial = {nullptr};
-	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGameplayEffect> DefaultAttributes = {nullptr};
 };

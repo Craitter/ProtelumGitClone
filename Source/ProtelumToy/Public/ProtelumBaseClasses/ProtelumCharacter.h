@@ -11,6 +11,7 @@
 #include "ProtelumCharacter.generated.h"
 
 
+class UContainerComponent;
 class ASimpleProjectile;
 class AGameplayAbilityTargetActor;
 class AP_GATA_GroundDeploy;
@@ -63,7 +64,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UNiagaraComponent* GetWeaponNiagaraSystem() const {return WeaponNiagaraSystem;}
 	UFUNCTION(BlueprintCallable)
+	FTransform GetProjectileSpawnTransform();
+	UFUNCTION(BlueprintCallable)
 	UNiagaraComponent* GetNiagaraSystem() const {return NiagaraSystem;}
+	UFUNCTION(BlueprintCallable)
+	UContainerComponent* GetInventoryComponent() const {return InventoryComponent;}
+
+	void GetTargetingData(FVector& PlayerLocation, FVector& CameraLocation, FVector& WeaponCenterLocation, FVector& CameraForwardVector) const;
 	
 	UFUNCTION(BlueprintCallable)
 	void SetMState(EMovementState NewMState);
@@ -81,14 +88,18 @@ public:
 	void ActivateCurrentWeapon() const;
 protected:
 	void SetCurrentWeapon(FGameplayTag WeaponTag);
-	
-	UPROPERTY(EditDefaultsOnly)
+
+	//Todo: Find a way to load in depending on Shaman or Human
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	FGameplayTag PrimaryWeaponTag;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	FGameplayTag SecondaryWeaponTag;
 
 private:
 	// 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UContainerComponent> InventoryComponent = {nullptr};
 	
 	//The CameraBoom/SpringArm Component
 	UPROPERTY(VisibleAnywhere)

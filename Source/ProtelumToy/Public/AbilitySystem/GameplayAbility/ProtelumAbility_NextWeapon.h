@@ -16,5 +16,6 @@ class PROTELUMTOY_API UProtelumAbility_NextWeapon : public UProtelumGameplayAbil
 
 	UProtelumAbility_NextWeapon();
 
+	//CanActivate? Todo: Future more dynamic depending on animations 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 };

@@ -11,17 +11,26 @@ UProtelumGameplayAbility::UProtelumGameplayAbility()
 	//This is Recommended to be false always, if thinking about Activation look in Traneks Documentation
 	bServerRespectsRemoteAbilityCancellation = false;
 	bHasToBeBoundToInput = true;
+	bActivateAbilityOnGranted = false;
+	bInputActivatesAbility = true;
+}
+
+void UProtelumGameplayAbility::OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+{
+	Super::OnAvatarSet(ActorInfo, Spec);
+
+	if(bActivateAbilityOnGranted)
+	{
+		bool ActivatedAbility = ActorInfo->AbilitySystemComponent->TryActivateAbility(Spec.Handle, false);
+	}
 }
 
 void UProtelumGameplayAbility::PreActivate(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData)
+                                           const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                           FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData)
 {
-	// if(bCharacterShouldAim)
-	// {
-	// 	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag("State.Aiming"));
-	// }
-	//Todo: Make this a GameplayEffect for more flexibility
+
+	//Todo: Make this a GameplayEffect for more flexibility maybe? not sure this is working good now
 	switch (CharacterShouldAimWhenAbilityIsActive)
 	{	case EAimBehavior::AB_NoAim:
 			break;
@@ -41,13 +50,6 @@ void UProtelumGameplayAbility::PreActivate(const FGameplayAbilitySpecHandle Hand
 	}
 		
 	Super::PreActivate(Handle, ActorInfo, ActivationInfo, OnGameplayAbilityEndedDelegate, TriggerEventData);
-}
-
-void UProtelumGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	bool bReplicateEndAbility, bool bWasCancelled)
-{	
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UProtelumGameplayAbility::OnWaitingForConfirmInputBegin()
@@ -96,6 +98,22 @@ void UProtelumGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Ha
 		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(CooldownTags);
 		FActiveGameplayEffectHandle EffectHandle = ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 	}
+}
+
+bool UProtelumGameplayAbility::ShouldActivateAbilityOnInputPressed()
+{
+	return bInputActivatesAbility;
+}
+
+bool UProtelumGameplayAbility::IsInputPressed() const
+{
+	const FGameplayAbilitySpec* Spec = GetCurrentAbilitySpec();
+	return Spec && Spec->InputPressed;
+}
+
+void UProtelumGameplayAbility::ClearTargetData(FGameplayAbilityTargetDataHandle& TargetDataHandle)
+{
+	TargetDataHandle.Clear();
 }
 
 FGameplayAbilityTargetingLocationInfo UProtelumGameplayAbility::GetTargetLocationInfoByIndexOfTargetDataHandle(

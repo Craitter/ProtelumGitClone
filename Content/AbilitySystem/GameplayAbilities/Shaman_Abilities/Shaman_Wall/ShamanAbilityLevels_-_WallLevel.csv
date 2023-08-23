@@ -1,0 +1,9 @@
+Level/Data,1,2,3,4,5,Units
+Health,100,150,200,400,600,Points
+MaxHealth,100,150,200,400,600,Points
+Lenght,200,300,400,500,700,CM
+Height,100,150,200,250,300,CM
+Width,50,50,50,50,50,CM
+Cooldown,20,19,18,17,15,Seconds
+Range,500,500,500,500,500,CM
+LifeTime,6,8,10,12,15,Seconds

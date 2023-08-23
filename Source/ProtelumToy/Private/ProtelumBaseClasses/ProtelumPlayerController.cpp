@@ -6,7 +6,11 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystem/ProtelumAbilitySystemComponent.h"
+#include "ProtelumBaseClasses/HideoutGameMode.h"
+#include "ProtelumBaseClasses/MainMenuGameMode.h"
+#include "ProtelumBaseClasses/MissionGameMode.h"
 #include "ProtelumBaseClasses/ProtelumCharacter.h"
+#include "Subsystems/UISubsystem.h"
 
 
 namespace AbilityInputBindingComponent_Impl
@@ -55,11 +59,21 @@ void AProtelumPlayerController::Tick(float DeltaSeconds)
 	// }
 }
 
+void AProtelumPlayerController::ReceivedGameModeClass(TSubclassOf<AGameModeBase> GameModeClass)
+{
+	Super::ReceivedGameModeClass(GameModeClass);
+}
+
 void AProtelumPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
 
 	ProtelumCharacter = Cast<AProtelumCharacter>(GetPawn());
+}
+
+void AProtelumPlayerController::PostActorCreated()
+{
+	Super::PostActorCreated();
 }
 
 void AProtelumPlayerController::OnPossess(APawn* InPawn)
@@ -76,14 +90,30 @@ void AProtelumPlayerController::BeginPlay()
 	if(const TObjectPtr<ULocalPlayer> LocalPlayer = GetLocalPlayer())
 	{
 		InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-		if(IsValid(InputSubsystem))
+	}
+	const TWeakObjectPtr<UGameInstance> GameInstance = GetGameInstance();
+	if(GameInstance.IsValid())
+	{
+		const TWeakObjectPtr<UUISubsystem> UISubsystem = GameInstance->GetSubsystem<UUISubsystem>();
+		if(UISubsystem.IsValid())
 		{
-			if(!DefaultIMC.IsNull())
+			switch (UISubsystem->BaseWidgetType)
 			{
-				InputSubsystem->AddMappingContext(DefaultIMC.LoadSynchronous(), 0);
+				case EBaseWidgetType::MainMenu:
+					UISubsystem->InitMenuInput();
+					break;
+				case EBaseWidgetType::MissionOverlay:
+					UISubsystem->InitMissionInput();
+					break;
+				case EBaseWidgetType::HideoutOverlay:
+					UISubsystem->InitHideoutInput();
+					break;
+				default: ;
 			}
 		}
 	}
+	// ActivateGameInput();
+	
 	if(IsValid(PlayerCameraManager))
 	{
 		PlayerCameraManager->ViewPitchMin = -80.0f;
@@ -114,6 +144,59 @@ void AProtelumPlayerController::SetupInputComponent()
 	}
 	//End Does Nothing Right now
 	RunAbilitySystemSetup();
+}
+
+void AProtelumPlayerController::ActivateMenuInput(const FInputModeGameAndUI& Mode)
+{
+	if(IsValid(InputSubsystem))
+	{
+		
+		if(!MKMenuIMC.IsNull())
+		{
+			InputSubsystem->RemoveMappingContext(MKGameIMC.Get());
+			InputSubsystem->AddMappingContext(MKMenuIMC.LoadSynchronous(), 0);
+		}
+	}
+	if(IsValid(PlayerCameraManager))
+	{
+		PlayerCameraManager->DisableInput(this);
+	}
+	SetInputMode(Mode);
+	SetShowMouseCursor(true);
+}
+
+void AProtelumPlayerController::ActivateGameInput()
+{
+	SetInputMode(FInputModeGameOnly());
+	SetShowMouseCursor(false);
+
+	if(IsValid(PlayerCameraManager))
+	{
+		PlayerCameraManager->EnableInput(this);
+	}
+	
+	if(IsValid(InputSubsystem))
+	{
+		if(!MKGameIMC.IsNull())
+		{
+			InputSubsystem->RemoveMappingContext(MKInventoryIMC.Get());
+			InputSubsystem->RemoveMappingContext(MKMenuIMC.Get());
+			InputSubsystem->AddMappingContext(MKGameIMC.LoadSynchronous(), 0);
+
+		}
+	}
+}
+
+void AProtelumPlayerController::ActivateInventoryInput(const FInputModeGameAndUI& Mode)
+{
+	ActivateMenuInput(Mode);
+	if(InputSubsystem != nullptr)
+	{
+		if(!MKInventoryIMC.IsNull())
+		{
+			InputSubsystem->AddMappingContext(MKInventoryIMC.LoadSynchronous(), 0);
+		}
+	}
 }
 
 //should always be called AFTER granting ability!!!

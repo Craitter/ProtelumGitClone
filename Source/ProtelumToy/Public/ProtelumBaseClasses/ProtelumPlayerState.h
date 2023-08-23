@@ -26,10 +26,11 @@ class PROTELUMTOY_API AProtelumPlayerState : public APlayerState, public IAbilit
 public:
 	
 	AProtelumPlayerState();
+	// virtual void ClientInitialize(AController* C) override;
 protected:
-	
 
 	virtual void BeginPlay() override;
+	
 	//Begin CHarcter AttributeChangedDelegate
 	FDelegateHandle MoveSpeedChangedDelegateHandle;
 	FDelegateHandle CharacterLevelChangedDelegateHandle;
@@ -104,7 +105,7 @@ protected:
 	virtual void ProjectileHealChanged(const FOnAttributeChangeData& Data);
 	//End ShamanWeapon AttributeChangedCallbacks
 
-	FGameplayTag MaxHealAmmo;
+	FGameplayTag MaxHealAmmo; //Todo: Find out for what this was
 	FGameplayTag MaxDamageAmmo;
 public:
 	//Begin Character Attribute Getter
